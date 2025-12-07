@@ -1,0 +1,23 @@
+tags:
+  - Quiz
+summary: '(Create) Сгенерировать новый квиз с помощью ИИ'
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, example: 'Солнечная система состоит из Солнца...' }
+        count: { type: integer, example: 3, description: 'Количество вопросов (3-5)' }
+responses:
+  '200': { description: 'Квиз успешно сгенерирован' }
+  '401': { description: 'Токен отсутствует или невалиден' }
+  '503': { description: 'Ошибка при обращении к внешнему API' }

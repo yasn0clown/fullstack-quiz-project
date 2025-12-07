@@ -1,0 +1,8 @@
+tags:
+  - Quiz
+summary: '(Read) Получить вопросы для демо-теста'
+produces:
+  - application/json
+responses:
+  '200':
+    description: 'Список вопросов для демонстрационного теста'

@@ -1,0 +1,15 @@
+tags:
+  - Authentication
+summary: 'Обновление access_token с помощью refresh_token'
+produces:
+  - application/json
+security:
+  - Bearer: []
+responses:
+  '200':
+    description: 'Токен успешно обновлен'
+    schema:
+      type: object
+      properties:
+        access_token: { type: string }
+  '401': { description: 'Refresh токен отсутствует или невалиден' }

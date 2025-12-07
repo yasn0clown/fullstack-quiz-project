@@ -1,0 +1,15 @@
+tags:
+  - Authentication
+summary: 'Получение информации о текущем пользователе'
+produces:
+  - application/json
+security:
+  - Bearer: []
+responses:
+  '200':
+    description: 'Информация о профиле'
+    schema:
+      type: object
+      properties:
+        username: { type: string, example: 'newuser' }
+  '401': { description: 'Токен отсутствует или невалиден' }

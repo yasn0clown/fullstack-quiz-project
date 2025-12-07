@@ -1,0 +1,43 @@
+tags:
+  - Results
+summary: 'Работа с результатами тестов'
+description: 'Позволяет получить список всех результатов (GET) или добавить новый (POST).'
+
+get:
+  summary: '(Read) Получить все результаты (таблица лидеров)'
+  produces:
+    - application/json
+  responses:
+    '200':
+      description: 'Список результатов, отсортированный по очкам'
+      schema:
+        type: array
+        items:
+          type: object
+          properties:
+            id: { type: integer }
+            username: { type: string }
+            score: { type: integer }
+            total: { type: integer }
+
+post:
+  summary: '(Create) Сохранить результат пройденного теста'
+  consumes:
+    - application/json
+  produces:
+    - application/json
+  security:
+    - Bearer: []
+  parameters:
+    - in: body
+      name: body
+      required: true
+      schema:
+        type: object
+        required: [score, total]
+        properties:
+          score: { type: integer, example: 2 }
+          total: { type: integer, example: 3 }
+  responses:
+    '201': { description: 'Результат успешно сохранен' }
+    '401': { description: 'Токен отсутствует или невалиден' }

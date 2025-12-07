@@ -1,0 +1,27 @@
+# Папки с зависимостями
+/backend/venv/
+/frontend-ts/node_modules/
+
+# Секреты
+/backend/.env
+
+# Файлы базы данных
+/backend/quiz.db
+/backend/quiz.db-journal
+
+# Кэш Python
+/backend/__pycache__/
+*.pyc
+
+# Сборки фронтенда
+/frontend-ts/dist/
+/frontend-ts/.vite/
+
+# Логи и временные файлы
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Файлы ОС
+.DS_Store
+Thumbs.db

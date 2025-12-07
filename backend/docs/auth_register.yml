@@ -1,0 +1,21 @@
+tags:
+  - Authentication
+summary: 'Регистрация нового пользователя'
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, example: 'newuser' }
+        password: { type: string, example: 'password123' }
+responses:
+  '201': { description: 'Пользователь успешно создан' }
+  '400': { description: 'Не предоставлены имя пользователя или пароль' }
+  '409': { description: 'Пользователь с таким именем уже существует' }

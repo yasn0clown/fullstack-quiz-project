@@ -1,0 +1,26 @@
+tags:
+  - Authentication
+summary: 'Вход пользователя и получение токенов'
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, example: 'newuser' }
+        password: { type: string, example: 'password123' }
+responses:
+  '200':
+    description: 'Успешный вход'
+    schema:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+  '401': { description: 'Неверное имя пользователя или пароль' }
