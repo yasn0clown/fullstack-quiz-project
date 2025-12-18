@@ -1,9 +1,7 @@
-import { AppShell, Burger, Group, NavLink } from '@mantine/core';
+import { AppShell, Burger, Group, NavLink as MantineNavLink, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Outlet, Link } from 'react-router-dom';
-import { NavLink as MantineNavLink } from '@mantine/core';
 import { useAuth } from './AuthContext';
-import { Text } from '@mantine/core';
 
 export default function App() {
   const [opened, { toggle }] = useDisclosure();
@@ -16,7 +14,7 @@ export default function App() {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md" position="apart">
+        <Group h="100%" px="md" justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             Платформа Тестов
@@ -25,10 +23,11 @@ export default function App() {
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
-        <MantineNavLink component={Link} to="/" label="Главная" onClick={toggle} />
-        <MantineNavLink component={Link} to="/generator" label="Создать квиз по тексту" onClick={toggle} />
-        <MantineNavLink component={Link} to="/quiz" label="Демо-тест" onClick={toggle} />
-        <MantineNavLink component={Link} to="/leaderboard" label="Таблица лидеров" onClick={toggle} />
+        <MantineNavLink component={Link} to="/" label="Главная" onClick={toggle}/>
+        <MantineNavLink component={Link} to="/community" label="Библиотека квизов" onClick={toggle}/>
+        <MantineNavLink component={Link} to="/generator" label="Создать свой квиз" onClick={toggle}/>
+        <MantineNavLink component={Link} to="/quiz" label="Демо-тест" onClick={toggle}/>
+        <MantineNavLink component={Link} to="/leaderboard" label="Таблица лидеров" onClick={toggle}/>
         <hr />
         {isAuthenticated ? (
           <MantineNavLink label="Выйти" onClick={logout} />

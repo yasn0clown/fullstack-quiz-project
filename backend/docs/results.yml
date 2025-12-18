@@ -19,6 +19,7 @@ get:
             username: { type: string }
             score: { type: integer }
             total: { type: integer }
+            quiz_title: { type: string }
 
 post:
   summary: '(Create) Сохранить результат пройденного теста'
@@ -34,10 +35,11 @@ post:
       required: true
       schema:
         type: object
-        required: [score, total]
+        required: [score, total, quiz_title]
         properties:
           score: { type: integer, example: 2 }
           total: { type: integer, example: 3 }
+          quiz_title: { type: string, example: 'Тест по истории Python' }
   responses:
     '201': { description: 'Результат успешно сохранен' }
     '401': { description: 'Токен отсутствует или невалиден' }

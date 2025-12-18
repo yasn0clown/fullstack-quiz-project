@@ -1,0 +1,21 @@
+tags:
+  - Saved Quizzes
+summary: '(Read) Получить список всех сохраненных квизов'
+description: 'Возвращает список всех квизов, созданных пользователями, для отображения в библиотеке.'
+produces:
+  - application/json
+security:
+  - Bearer: []
+responses:
+  '200':
+    description: 'Список квизов'
+    schema:
+      type: array
+      items:
+        type: object
+        properties:
+          id: { type: integer }
+          title: { type: string }
+          author: { type: string }
+          question_count: { type: integer }
+  '401': { description: 'Токен отсутствует или невалиден' }

@@ -1,0 +1,19 @@
+tags:
+  - Saved Quizzes
+summary: '(Read) Получить конкретный квиз по ID'
+description: 'Возвращает полную информацию о квизе, включая все вопросы, для его прохождения.'
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - name: quiz_id
+    in: path
+    type: integer
+    required: true
+    description: 'ID квиза, который нужно получить.'
+responses:
+  '200':
+    description: 'Данные квиза'
+  '401': { description: 'Токен отсутствует или невалиден' }
+  '404': { description: 'Квиз с таким ID не найден' }

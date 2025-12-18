@@ -1,0 +1,39 @@
+tags:
+  - Saved Quizzes
+summary: '(Create) Сохранить новый сгенерированный квиз'
+description: 'Принимает название и массив вопросов для сохранения в базе данных.'
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - Bearer: []
+parameters:
+  - in: body
+    name: body
+    required: true
+    schema:
+      type: object
+      required: [title, questions]
+      properties:
+        title:
+          type: string
+          example: 'Тест по истории Python'
+        questions:
+          type: array
+          items:
+            type: object
+            properties:
+              question: { type: string }
+              options: { type: array, items: { type: string } }
+              answer: { type: string }
+responses:
+  '201':
+    description: 'Квиз успешно сохранен'
+    schema:
+      type: object
+      properties:
+        message: { type: string }
+        quiz_id: { type: integer }
+  '400': { description: 'Не предоставлены название или вопросы' }
+  '401': { description: 'Токен отсутствует или невалиден' }

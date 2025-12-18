@@ -3,7 +3,7 @@ load_dotenv()
 import os
 import requests
 import json
-from datetime import timedelta
+from datetime import timedelta, datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flasgger import Swagger, swag_from
@@ -50,17 +50,32 @@ swagger = Swagger(app, template=swagger_template)
 
 print("Server ready. AI is now handled by OpenRouter API.")
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    quizzes = db.relationship('Quiz', backref='author', lazy=True)
 
 class Result(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     total = db.Column(db.Integer, nullable=False)
+    quiz_title = db.Column(db.String(100), nullable=False, default="Неизвестный квиз")
 
-class User(db.Model):
+class Quiz(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    questions = db.relationship('Question', backref='quiz', lazy=True, cascade="all, delete-orphan")
+
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(500), nullable=False)
+    options = db.Column(db.JSON, nullable=False)
+    answer = db.Column(db.String(250), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
 
 with app.app_context():
     db.create_all()
@@ -123,13 +138,24 @@ def handle_results():
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
         data = request.json
-        new_result = Result(username=user.username, score=data['score'], total=data['total'])
+        
+        quiz_title = data.get('quiz_title', 'Демо-тест')
+
+        new_result = Result(
+            username=user.username, 
+            score=data['score'], 
+            total=data['total'],
+            quiz_title=quiz_title
+        )
         db.session.add(new_result)
         db.session.commit()
         return jsonify({'message': 'Результат сохранен'}), 201
     else:
         results = Result.query.order_by(Result.score.desc()).all()
-        results_list = [{'id': r.id, 'username': r.username, 'score': r.score, 'total': r.total} for r in results]
+        results_list = [
+            {'id': r.id, 'username': r.username, 'score': r.score, 'total': r.total, 'quiz_title': r.quiz_title} 
+            for r in results
+        ]
         return jsonify(results_list)
 
 @app.route('/api/generate-quiz', methods=['POST'])
@@ -170,6 +196,39 @@ def generate_quiz():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         return jsonify({'error': 'Внутренняя ошибка сервера'}), 500
+
+@app.route('/api/quizzes', methods=['GET'])
+@swag_from('docs/quizzes_get_all.yml')
+def get_all_quizzes():
+    verify_jwt_in_request()
+    quizzes = Quiz.query.order_by(Quiz.created_at.desc()).all()
+    quizzes_list = [{'id': quiz.id, 'title': quiz.title, 'author': quiz.author.username, 'question_count': len(quiz.questions)} for quiz in quizzes]
+    return jsonify(quizzes_list)
+
+@app.route('/api/quizzes/<int:quiz_id>', methods=['GET'])
+@swag_from('docs/quizzes_get_one.yml')
+def get_quiz_by_id(quiz_id):
+    verify_jwt_in_request()
+    quiz = Quiz.query.get_or_404(quiz_id)
+    questions_list = [{'question': q.text, 'options': q.options, 'answer': q.answer} for q in quiz.questions]
+    return jsonify({'id': quiz.id, 'title': quiz.title, 'author': quiz.author.username, 'questions': questions_list})
+
+@app.route('/api/quizzes', methods=['POST'])
+@swag_from('docs/quizzes_post_new.yml')
+def save_new_quiz():
+    verify_jwt_in_request()
+    current_user_id = get_jwt_identity()
+    data = request.get_json()
+    title = data.get('title')
+    questions_data = data.get('questions')
+    if not title or not questions_data: return jsonify({'error': 'Требуется название и вопросы'}), 400
+    new_quiz = Quiz(title=title, user_id=current_user_id)
+    db.session.add(new_quiz)
+    for q_data in questions_data:
+        new_question = Question(text=q_data['question'], options=q_data['options'], answer=q_data['answer'], quiz=new_quiz)
+        db.session.add(new_question)
+    db.session.commit()
+    return jsonify({'message': 'Квиз успешно сохранен!', 'quiz_id': new_quiz.id}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -24,7 +24,12 @@ export default function Quiz() {
   const [answerChecked, setAnswerChecked] = useState(false);
   const [userAnswers, setUserAnswers] = useState<{ [key: number]: string }>({});
 
+  const [quizTitle, setQuizTitle] = useState('Демо-тест');
+  const [isCreatorFlow, setIsCreatorFlow] = useState(false);
+
   useEffect(() => {
+    const { generatedQuestions, quizTitle: title, isCreatorFlow: creator } = location.state || {};
+
     const fetchUsername = async () => {
       try {
         const response = await api.get('/profile');
@@ -34,15 +39,17 @@ export default function Quiz() {
       }
     };
 
-    if (location.state && location.state.generatedQuestions) {
-      const { generatedQuestions } = location.state;
+    if (generatedQuestions) {
       setQuestions(generatedQuestions);
+      setQuizTitle(title || 'Сгенерированный квиз');
+      setIsCreatorFlow(creator || false);
       fetchUsername();
       setLoading(false);
     } else {
       fetchUsername();
       api.get('/questions').then(response => {
         setQuestions(response.data);
+        setQuizTitle('Демо-тест');
         setLoading(false);
       }).catch(console.error);
     }
@@ -76,9 +83,22 @@ export default function Quiz() {
       await api.post('/results', {
         score: score,
         total: questions.length,
+        quiz_title: quizTitle,
       });
     } catch (error) {
       console.error("Ошибка при отправке результата:", error);
+    }
+  };
+  
+  const handleSaveQuiz = async () => {
+    try {
+        await api.post('/quizzes', {
+            title: quizTitle,
+            questions: questions,
+        });
+        navigate('/community');
+    } catch (error) {
+        console.error("Не удалось сохранить квиз", error);
     }
   };
 
@@ -95,19 +115,22 @@ export default function Quiz() {
   if (isFinished) {
     return (
       <Container>
-        <Title>Тест завершен!</Title>
-        <Text size="xl" mt="md">
-          {username}, ваш результат: {score} из {questions.length}
-        </Text>
-        <Group mt="xl">
-          <Button onClick={() => navigate('/')}>На главную</Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/results', { state: { questions, userAnswers } })}
-          >
-            Посмотреть свои ответы
-          </Button>
-        </Group>
+        <Title>Тест "{quizTitle}" завершен!</Title>
+        <Text size="xl" mt="md">{username}, ваш результат: {score} из {questions.length}</Text>
+        
+        {isCreatorFlow ? (
+          <Group mt="xl">
+            <Button onClick={handleSaveQuiz}>Сохранить квиз в библиотеку</Button>
+            <Button variant="outline" onClick={() => navigate('/generator')}>Создать другой</Button>
+          </Group>
+        ) : (
+          <Group mt="xl">
+            <Button onClick={() => navigate('/community')}>К списку квизов</Button>
+            <Button variant="outline" onClick={() => navigate('/results', { state: { questions, userAnswers } })}>
+              Посмотреть свои ответы
+            </Button>
+          </Group>
+        )}
       </Container>
     );
   }
@@ -131,7 +154,7 @@ export default function Quiz() {
             />
           ))}
         </Stack>
-        <Group position="right" mt="xl">
+        <Group justify="flex-end" mt="xl">
           {!answerChecked ? (
             <Button onClick={handleCheckAnswer} disabled={!selectedAnswer}>Проверить</Button>
           ) : (
