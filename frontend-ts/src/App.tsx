@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 export default function App() {
   const [opened, { toggle }] = useDisclosure();
-  const { isAuthenticated, username, logout } = useAuth();
+  const { isAuthenticated, username, role, logout } = useAuth();
 
   return (
     <AppShell
@@ -19,7 +19,7 @@ export default function App() {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             Платформа Тестов
           </Group>
-          {isAuthenticated && <Text size="sm">Привет, {username}!</Text>}
+          {isAuthenticated && <Text size="sm">Привет, {username} ({role})!</Text>}
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
@@ -28,6 +28,17 @@ export default function App() {
         <MantineNavLink component={Link} to="/generator" label="Создать свой квиз" onClick={toggle}/>
         <MantineNavLink component={Link} to="/quiz" label="Демо-тест" onClick={toggle}/>
         <MantineNavLink component={Link} to="/leaderboard" label="Таблица лидеров" onClick={toggle}/>
+        {isAuthenticated && role === 'admin' && (
+            <MantineNavLink 
+                component={Link} 
+                to="/admin" 
+                label="Админ-панель" 
+                color="red" 
+                active 
+                onClick={toggle}
+                variant="filled"
+            />
+        )}
         <hr />
         {isAuthenticated ? (
           <MantineNavLink label="Выйти" onClick={logout} />

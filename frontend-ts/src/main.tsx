@@ -14,6 +14,8 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Results from './pages/Results';
 import CommunityQuizzes from './pages/CommunityQuizzes';
+import AdminPanel from './pages/AdminPanel';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
   primaryColor: 'blue',
@@ -25,13 +27,24 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, element: <Home /> },
-      { path: 'quiz', element: <Quiz /> },
-      { path: 'generator', element: <Generator /> },
-      { path: 'leaderboard', element: <Leaderboard /> },
       { path: 'register', element: <Register /> },
       { path: 'login', element: <Login /> },
-      { path: 'results', element: <Results /> },
-      { path: 'community', element: <CommunityQuizzes /> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+            { path: 'quiz', element: <Quiz /> },
+            { path: 'generator', element: <Generator /> },
+            { path: 'leaderboard', element: <Leaderboard /> },
+            { path: 'results', element: <Results /> },
+            { path: 'community', element: <CommunityQuizzes /> },
+        ]
+      },
+      {
+        element: <ProtectedRoute requiredRole="admin" />,
+        children: [
+            { path: 'admin', element: <AdminPanel /> }
+        ]
+      }
     ],
   },
 ]);

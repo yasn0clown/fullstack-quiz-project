@@ -4,6 +4,7 @@ from .models import User, Result, Quiz, Question
 from .services import generate_quiz_from_api
 from flasgger import swag_from
 from flask_jwt_extended import (create_access_token, create_refresh_token, get_jwt_identity, verify_jwt_in_request)
+from .rbac import permission_required
 
 @app.route('/api/register', methods=['POST'])
 @swag_from('../docs/auth_register.yml')
@@ -28,7 +29,7 @@ def login():
     if user and bcrypt.check_password_hash(user.password_hash, password):
         access_token = create_access_token(identity=str(user.id))
         refresh_token = create_refresh_token(identity=str(user.id))
-        return jsonify(access_token=access_token, refresh_token=refresh_token)
+        return jsonify(access_token=access_token, refresh_token=refresh_token, role=user.role)
     return jsonify({"error": "Неверные данные"}), 401
 
 @app.route('/api/refresh', methods=['POST'])
@@ -45,7 +46,7 @@ def profile():
     verify_jwt_in_request()
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
-    return jsonify({"username": user.username})
+    return jsonify({"username": user.username, 'role': user.role})
 
 @app.route('/api/questions')
 @swag_from('../docs/quiz_get_demo.yml')
@@ -57,8 +58,8 @@ def get_questions():
 
 @app.route('/api/generate-quiz', methods=['POST'])
 @swag_from('../docs/quiz_post_generate.yml')
+@permission_required('create_quizzes')
 def generate_quiz():
-    verify_jwt_in_request()
     data = request.json
     context = data.get('text')
     num_questions = data.get('count', 3)
@@ -119,3 +120,18 @@ def save_new_quiz():
         db.session.add(new_question)
     db.session.commit()
     return jsonify({'message': 'Квиз успешно сохранен!', 'quiz_id': new_quiz.id}), 201
+
+@app.route('/api/admin/users/<int:user_id>/role', methods=['POST'])
+@permission_required('manage_users')
+def change_user_role(user_id):
+    data = request.json
+    new_role = data.get('role')
+    
+    if new_role not in ['user', 'admin']:
+        return jsonify({'error': 'Недопустимая роль'}), 400
+
+    user_to_edit = User.query.get_or_404(user_id)
+    user_to_edit.role = new_role
+    db.session.commit()
+
+    return jsonify({'message': f'Роль пользователя {user_to_edit.username} изменена на {new_role}'})
