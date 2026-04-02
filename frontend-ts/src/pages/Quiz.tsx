@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Title, Paper, Radio, Button, Group, Text, Loader, Stack } from '@mantine/core';
+import { Container, Title, Paper, Radio, Button, Group, Text, Loader, Stack, Image } from '@mantine/core';
 import api from '../api';
 
 interface Question {
@@ -26,9 +26,17 @@ export default function Quiz() {
 
   const [quizTitle, setQuizTitle] = useState('Демо-тест');
   const [isCreatorFlow, setIsCreatorFlow] = useState(false);
+  const [quizImage, setQuizImage] = useState<string | null>(null);
+  const [quizImageKey, setQuizImageKey] = useState<string | null>(null);
 
   useEffect(() => {
-    const { generatedQuestions, quizTitle: title, isCreatorFlow: creator } = location.state || {};
+    const { 
+      generatedQuestions, 
+      quizTitle: title, 
+      isCreatorFlow: creator, 
+      quizImage: img,
+      quizImageKey: imgKey
+    } = location.state || {};
 
     const fetchUsername = async () => {
       try {
@@ -43,6 +51,8 @@ export default function Quiz() {
       setQuestions(generatedQuestions);
       setQuizTitle(title || 'Сгенерированный квиз');
       setIsCreatorFlow(creator || false);
+      setQuizImage(img || null);
+      setQuizImageKey(imgKey || null);
       fetchUsername();
       setLoading(false);
     } else {
@@ -95,6 +105,7 @@ export default function Quiz() {
         await api.post('/quizzes', {
             title: quizTitle,
             questions: questions,
+            image_url: quizImageKey,
         });
         navigate('/community');
     } catch (error) {
@@ -142,6 +153,7 @@ export default function Quiz() {
     <Container>
       <Title order={2}>Вопрос {currentQuestionIndex + 1} из {questions.length}</Title>
       <Paper withBorder p="xl" mt="md" shadow="md">
+        {quizImage && (<Image src={quizImage} height={200} radius="md" mb="xl" fit="contain" alt="Обложка квиза" />)}
         <Text size="lg" mb="md">{currentQuestion.question}</Text>
         <Stack mt="xs">
           {currentQuestion.options.map((option) => (

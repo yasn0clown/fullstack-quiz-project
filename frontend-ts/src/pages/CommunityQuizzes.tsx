@@ -1,137 +1,149 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Title, Table, Loader, Alert, Button, Group, Text } from '@mantine/core';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Container, Title, Table, Loader, Alert, Button, Group, TextInput, Select, Pagination, Paper, Stack } from '@mantine/core';
+import { IconSearch, IconTrash } from '@tabler/icons-react';
+import { useAuth } from '../AuthContext';
 import api from '../api';
-
-interface CommunityQuiz {
-  id: number;
-  title: string;
-  author: string;
-  question_count: number;
-}
 
 export default function CommunityQuizzes() {
   const navigate = useNavigate();
-  const [quizzes, setQuizzes] = useState<CommunityQuiz[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const { username: currentUsername, role } = useAuth();
+  const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const page = parseInt(searchParams.get('page') || '1');
+  const search = searchParams.get('search') || '';
+  const sortBy = searchParams.get('sort_by') || 'created_at';
+  const qCount = searchParams.get('count') || '';
+
+  const fetchQuizzes = useCallback(() => {
+    setLoading(true);
+    api.get('/quizzes', { params: { page, search, sort_by: sortBy, count: qCount } })
+      .then(res => {
+        setQuizzes(res.data.quizzes);
+        setTotalPages(res.data.total_pages);
+      })
+      .finally(() => setLoading(false));
+  }, [page, search, sortBy, qCount]);
 
   useEffect(() => {
-    api.get('/quizzes')
-      .then(response => {
-        setQuizzes(response.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Не удалось загрузить список квизов. Возможно, вам нужно войти в систему.');
-        setLoading(false);
-      });
-  }, []);
+    fetchQuizzes();
+  }, [fetchQuizzes]);
 
-  const handleStartQuiz = async (quizId: number) => {
+  const handleDelete = async (quizId: number) => {
+    if (!window.confirm('Вы уверены, что хотите удалить этот квиз?')) return;
+    try {
+      await api.delete(`/quizzes/${quizId}`);
+      fetchQuizzes();
+    } catch (err) {
+      alert('Ошибка при удалении');
+    }
+  };
+
+  const handleStartQuiz = async (quizId: number, quizTitle: string) => {
     try {
       const response = await api.get(`/quizzes/${quizId}`);
       navigate('/quiz', {
         state: {
           generatedQuestions: response.data.questions,
           quizTitle: response.data.title,
+          quizImage: response.data.image_url,
           isCreatorFlow: false
         },
       });
     } catch {
-      setError('Не удалось загрузить этот квиз.');
+      alert('Не удалось загрузить вопросы квиза');
     }
   };
 
-  if (loading) return <Loader size="xl" />;
-  if (error) return <Alert color="red" title="Ошибка">{error}</Alert>;
-
-  const rows = quizzes.map((quiz) => (
-    <tr key={quiz.id}>
-      <td style={{ 
-        textAlign: 'left', 
-        verticalAlign: 'middle',
-        border: '1px solid var(--mantine-color-default-border)'
-      }}>{quiz.title}</td>
-      <td style={{ 
-        textAlign: 'left', 
-        verticalAlign: 'middle',
-        border: '1px solid var(--mantine-color-default-border)'
-      }}>{quiz.author}</td>
-      <td style={{ 
-        textAlign: 'center', 
-        verticalAlign: 'middle',
-        border: '1px solid var(--mantine-color-default-border)'
-      }}>{quiz.question_count}</td>
-      <td style={{ 
-        textAlign: 'center', 
-        verticalAlign: 'middle',
-        border: '1px solid var(--mantine-color-default-border)'
-      }}>
-        <Button size="xs" onClick={() => handleStartQuiz(quiz.id)}>Начать</Button>
-      </td>
-    </tr>
-  ));
-
   return (
-    <Container>
+    <Container size="lg">
       <Group justify="space-between" mb="xl">
         <Title>Библиотека квизов</Title>
         <Button onClick={() => navigate('/generator')}>Создать свой квиз</Button>
       </Group>
-      <Table 
-        striped 
-        highlightOnHover 
-        withColumnBorders
-        style={{ 
-          border: '1px solid var(--mantine-color-default-border)',
-          tableLayout: 'fixed',
-        }}
-      >
-        <colgroup>
-          <col style={{ width: '40%' }} />
-          <col style={{ width: '25%' }} />
-          <col style={{ width: '15%' }} />
-          <col style={{ width: '20%' }} />
-        </colgroup>
-        <thead>
-          <tr>
-            <th style={{ 
-              textAlign: 'left', 
-              verticalAlign: 'middle',
-              border: '1px solid var(--mantine-color-default-border)'
-            }}>Название</th>
-            <th style={{ 
-              textAlign: 'left', 
-              verticalAlign: 'middle',
-              border: '1px solid var(--mantine-color-default-border)'
-            }}>Автор</th>
-            <th style={{ 
-              textAlign: 'center', 
-              verticalAlign: 'middle',
-              border: '1px solid var(--mantine-color-default-border)'
-            }}>Вопросов</th>
-            <th style={{ 
-              textAlign: 'center', 
-              verticalAlign: 'middle',
-              border: '1px solid var(--mantine-color-default-border)'
-            }}>Действие</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length > 0 ? rows : (
-            <tr>
-              <td colSpan={4} style={{ 
-                textAlign: 'center', 
-                padding: 'md',
-                border: '1px solid var(--mantine-color-default-border)'
-              }}>
-                <Text p="md">Пока никто не создал ни одного квиза. Будьте первым!</Text>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
+
+      <Paper withBorder p="md" mb="xl">
+        <Group align="flex-end">
+          <TextInput
+            label="Поиск"
+            placeholder="Название..."
+            leftSection={<IconSearch size={16} />}
+            value={search}
+            onChange={(e) => setSearchParams({ search: e.target.value, page: '1', sort_by: sortBy, count: qCount })}
+            style={{ flex: 1 }}
+          />
+          
+          <Select
+            label="Вопросов"
+            placeholder="Все"
+            clearable
+            data={[
+              { value: '3', label: '3 вопроса' },
+              { value: '4', label: '4 вопроса' },
+              { value: '5', label: '5 вопросов' },
+            ]}
+            value={qCount}
+            onChange={(val) => setSearchParams({ search, sort_by: sortBy, page: '1', count: val || '' })}
+            style={{ width: 150 }}
+          />
+
+          <Select
+            label="Сортировка"
+            data={[
+              { value: 'created_at', label: 'Сначала новые' },
+              { value: 'title', label: 'По названию' },
+            ]}
+            value={sortBy}
+            onChange={(val) => setSearchParams({ search, sort_by: val || 'created_at', page: '1', count: qCount })}
+          />
+        </Group>
+      </Paper>
+
+      {loading ? <Loader size="xl" /> : (
+        <Stack>
+          <Table striped highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Название</Table.Th>
+                <Table.Th>Автор</Table.Th>
+                <Table.Th>Вопросов</Table.Th>
+                <Table.Th style={{ textAlign: 'center' }}>Действие</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {quizzes.map(q => (
+                <Table.Tr key={q.id}>
+                  <Table.Td>{q.title}</Table.Td>
+                  <Table.Td>{q.author}</Table.Td>
+                  <Table.Td>{q.question_count}</Table.Td>
+                  <Table.Td>
+                    <Group gap="xs" justify="center">
+                      <Button size="xs" onClick={() => handleStartQuiz(q.id, q.title)}>Начать</Button>
+                      
+                      {(q.author === currentUsername || role === 'admin') && (
+                        <Button size="xs" color="red" variant="light" onClick={() => handleDelete(q.id)}>
+                          <IconTrash size={14} />
+                        </Button>
+                      )}
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+
+          <Pagination 
+            total={totalPages} 
+            value={page} 
+            onChange={(p) => setSearchParams({ search, sort_by: sortBy, page: p.toString() })} 
+            justify="center"
+          />
+        </Stack>
+      )}
     </Container>
   );
 }

@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Results from './pages/Results';
 import CommunityQuizzes from './pages/CommunityQuizzes';
 import AdminPanel from './pages/AdminPanel';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
             { path: 'leaderboard', element: <Leaderboard /> },
             { path: 'results', element: <Results /> },
             { path: 'community', element: <CommunityQuizzes /> },
+            { path: 'profile', element: <Profile />},
         ]
       },
       {

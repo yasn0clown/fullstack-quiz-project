@@ -24,6 +24,7 @@ export default function App() {
       </AppShell.Header>
       <AppShell.Navbar p="md">
         <MantineNavLink component={Link} to="/" label="Главная" onClick={toggle}/>
+        {isAuthenticated && (<MantineNavLink component={Link} to="/profile" label="Мой профиль" onClick={toggle}/>)}
         <MantineNavLink component={Link} to="/community" label="Библиотека квизов" onClick={toggle}/>
         <MantineNavLink component={Link} to="/generator" label="Создать свой квиз" onClick={toggle}/>
         <MantineNavLink component={Link} to="/quiz" label="Демо-тест" onClick={toggle}/>

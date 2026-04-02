@@ -1,88 +1,51 @@
 import { useState, useEffect } from 'react';
-import { Container, Title, Table, Loader, Alert } from '@mantine/core';
+import { Container, Title, Table, Loader, Pagination, Stack } from '@mantine/core';
 import api from '../api';
 
-interface Result {
-  id: number;
-  username: string;
-  score: number;
-  total: number;
-  quiz_title: string;
-}
-
 export default function Leaderboard() {
-  const [results, setResults] = useState<Result[]>([]);
+  const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    api.get('/results')
-      .then((response) => {
-        setResults(response.data);
-        setLoading(false);
+    setLoading(true);
+    api.get('/results', { params: { page } })
+      .then((res) => {
+        setResults(res.data.results);
+        setTotalPages(res.data.total_pages);
       })
-      .catch(() => {
-        setError('Не удалось загрузить таблицу лидеров.');
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <Loader size="xl" />;
-  if (error) return <Alert color="red" title="Ошибка">{error}</Alert>;
-
-  const rows = results.map((result, index) => (
-    <tr key={result.id}>
-      <td>{index + 1}</td>
-      <td>{result.username}</td>
-      <td>{result.quiz_title}</td>
-      <td>{`${result.score} / ${result.total}`}</td>
-    </tr>
-  ));
+      .finally(() => setLoading(false));
+  }, [page]);
 
   return (
     <Container>
-    <Title mb="xl">Таблица лидеров</Title>
-    <Table 
-      striped 
-      highlightOnHover 
-      withColumnBorders
-      style={{ 
-        border: '1px solid var(--mantine-color-default-border)',
-        tableLayout: 'fixed',
-      }}
-      className="leaderboard-table"
-    >
-      <style>{`
-        .leaderboard-table th, .leaderboard-table td {
-          text-align: left;
-          vertical-align: middle;
-          border: 1px solid var(--mantine-color-default-border);
-        }
-        .leaderboard-table th:nth-of-type(1), 
-        .leaderboard-table td:nth-of-type(1) {
-          text-align: center;
-        }
-        .leaderboard-table th:nth-of-type(4), 
-        .leaderboard-table td:nth-of-type(4) {
-          text-align: center;
-        }
-      `}</style>
-      <colgroup>
-        <col style={{ width: '10%' }} />
-        <col style={{ width: '30%' }} />
-        <col style={{ width: '40%' }} />
-        <col style={{ width: '20%' }} />
-      </colgroup>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Имя</th>
-          <th>Квиз</th>
-          <th>Результат</th>
-        </tr>
-      </thead>
-      <tbody>{rows.length > 0 ? rows : <tr><td colSpan={4}>Пока нет результатов</td></tr>}</tbody>
-    </Table>
-  </Container>
+      <Title mb="xl">Таблица лидеров</Title>
+      {loading ? <Loader size="xl" /> : (
+        <Stack>
+          <Table striped highlightOnHover withTableBorder>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>#</Table.Th>
+                <Table.Th>Имя</Table.Th>
+                <Table.Th>Квиз</Table.Th>
+                <Table.Th>Результат</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {results.map((r, index) => (
+                <Table.Tr key={r.id}>
+                  <Table.Td>{(page - 1) * 10 + index + 1}</Table.Td>
+                  <Table.Td>{r.username}</Table.Td>
+                  <Table.Td>{r.quiz_title}</Table.Td>
+                  <Table.Td>{r.score} / {r.total}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+          <Pagination total={totalPages} value={page} onChange={setPage} justify="center" />
+        </Stack>
+      )}
+    </Container>
   );
 }

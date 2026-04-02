@@ -6,6 +6,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')
+    avatar_url = db.Column(db.String(255), nullable=True)
+    bio = db.Column(db.String(250), nullable=True)
     quizzes = db.relationship('Quiz', backref='author', lazy=True)
 
 class Result(db.Model):
@@ -21,6 +23,7 @@ class Quiz(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     questions = db.relationship('Question', backref='quiz', lazy=True, cascade="all, delete-orphan")
+    image_url = db.Column(db.String(255), nullable=True)
 
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -23,9 +23,14 @@ def generate_quiz_from_api(context, num_questions):
         'X-Title': 'Quiz Platform'
         }
     payload = {
-        "model": "mistralai/mistral-7b-instruct",
+        "model": "deepseek/deepseek-chat",
         "messages": [ {"role": "user", "content": prompt_text} ],
-        "response_format": {"type": "json_object"}
+        "temperature": 0.2,
+        "max_tokens": 1500,
+        "response_format": {"type": "json_object"},
+        "top_p": 1,               # Оставляем стандартным для DeepSeek
+        "frequency_penalty": 0,   # Чтобы не штрафовать за повторение терминов из текста
+        "presence_penalty": 0     # Чтобы модель не уходила в дебри от темы
     }
 
     response = requests.post(
@@ -33,7 +38,10 @@ def generate_quiz_from_api(context, num_questions):
         headers=headers, 
         json=payload,
     )
-    response.raise_for_status()
+
+    if response.status_code != 200:
+        print(f"Ошибка OpenRouter: {response.status_code} - {response.text}")
+        response.raise_for_status()
     
     api_response_text = response.json()['choices'][0]['message']['content']
     return json.loads(api_response_text)

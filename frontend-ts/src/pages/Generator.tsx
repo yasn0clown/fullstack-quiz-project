@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Title, Textarea, Button, Paper, Text, Loader, Alert, Group, SegmentedControl, TextInput } from '@mantine/core';
+import { 
+  Container, Title, Textarea, Button, Paper, Text, Loader, 
+  Alert, Group, SegmentedControl, TextInput, FileButton, Image, Stack, Center 
+} from '@mantine/core';
+import { IconPhoto, IconX } from '@tabler/icons-react';
 import api from '../api';
 
 export default function Generator() {
@@ -9,13 +13,25 @@ export default function Generator() {
   const [context, setContext] = useState('');
   const [numQuestions, setNumQuestions] = useState('3');
   const [quizTitle, setQuizTitle] = useState('');
+  
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleFileChange = (file: File | null) => {
+    setFile(file);
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setPreview(null);
+    }
+  };
+
   const handleGenerateAndPlay = async () => {
     if (!context.trim() || !quizTitle.trim()) {
-      setError('Пожалуйста, введите название квиза и текст для генерации.');
+      setError('Пожалуйста, введите название и текст.');
       return;
     }
 
@@ -23,6 +39,20 @@ export default function Generator() {
     setError('');
 
     try {
+      let imageKeyForDb = null;
+      let imageUrlForPreview = null;
+
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const uploadRes = await api.post('/quizzes/upload-image', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        imageKeyForDb = uploadRes.data.image_key;
+        imageUrlForPreview = uploadRes.data.image_url;
+      }
+
       const response = await api.post('/generate-quiz', {
         text: context,
         count: parseInt(numQuestions, 10),
@@ -33,66 +63,86 @@ export default function Generator() {
           generatedQuestions: response.data.questions,
           isCreatorFlow: true,
           quizTitle: quizTitle,
+          quizImage: imageUrlForPreview,
+          quizImageKey: imageKeyForDb
         },
       });
 
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Произошла ошибка при генерации квиза.');
+      setError(err.response?.data?.error || 'Ошибка при создании квиза.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Container>
+    <Container size="sm">
       <Title order={1}>Мастер создания квиза</Title>
-      <Text c="dimmed" mt="md">
-        Дайте название вашему тесту, вставьте текст, и ИИ создаст для вас уникальный квиз, который вы сразу сможете пройти.
-      </Text>
+      
+      <Paper withBorder p="xl" mt="xl" shadow="md" radius="md">
+        <Stack>
+          <TextInput
+              label="Название квиза"
+              placeholder="Например, 'История Древнего Рима'"
+              value={quizTitle}
+              onChange={(e) => setQuizTitle(e.currentTarget.value)}
+              required
+          />
 
-      <Paper withBorder p="xl" mt="xl" shadow="md">
-        <Title order={3}>Создайте свой квиз</Title>
-
-        <TextInput
-            label="Название квиза"
-            placeholder="Например, 'Основы Python'"
-            value={quizTitle}
-            onChange={(e) => setQuizTitle(e.currentTarget.value)}
+          <Text size="sm" fw={500} mb={-10}>Обложка квиза (необязательно)</Text>
+          <Paper withBorder p="xs" radius="md" style={{ borderStyle: 'dashed' }}>
+            {preview ? (
+              <Stack align="center">
+                <Image src={preview} height={150} radius="md" fit="contain" />
+                <Button variant="subtle" color="red" size="xs" onClick={() => handleFileChange(null)} leftSection={<IconX size={14}/>}>
+                  Удалить фото
+                </Button>
+              </Stack>
+            ) : (
+              <Center py="md">
+                <FileButton onChange={handleFileChange} accept="image/png,image/jpeg">
+                  {(props) => (
+                    <Button {...props} variant="light" leftSection={<IconPhoto size={16} />}>
+                      Выбрать обложку
+                    </Button>
+                  )}
+                </FileButton>
+              </Center>
+            )}
+          </Paper>
+          
+          <Textarea
+            label="Текст для генерации"
+            placeholder="Вставьте учебный материал..."
+            value={context}
+            onChange={(event) => setContext(event.currentTarget.value)}
+            minRows={6}
+            autosize
             required
-        />
-        
-        <Textarea
-          label="Учебный текст"
-          placeholder="Вставьте сюда текст..."
-          value={context}
-          onChange={(event) => setContext(event.currentTarget.value)}
-          minRows={8}
-          autosize
-          mt="md"
-          required
-        />
+          />
 
-        <Text size="sm" mt="md" fw={500}>Количество вопросов</Text>
-        <SegmentedControl
-          value={numQuestions}
-          onChange={setNumQuestions}
-          data={['3', '4', '5']}
-          mt={5}
-          fullWidth
-        />
-        
-        <Group justify="flex-end" mt="xl">
-          <Button onClick={handleGenerateAndPlay} loading={isLoading} disabled={!quizTitle.trim() || !context.trim()}>
-            Сгенерировать и пройти
-          </Button>
-        </Group>
+          <Group grow>
+            <Stack gap={5}>
+                <Text size="sm" fw={500}>Вопросов</Text>
+                <SegmentedControl
+                    value={numQuestions}
+                    onChange={setNumQuestions}
+                    data={['3', '4', '5']}
+                />
+            </Stack>
+            <Button 
+                onClick={handleGenerateAndPlay} 
+                loading={isLoading} 
+                mt="xl"
+                disabled={!quizTitle.trim() || !context.trim()}
+            >
+                Сгенерировать и начать
+            </Button>
+          </Group>
+        </Stack>
       </Paper>
 
-      {error && (
-        <Alert title="Ошибка!" color="red" mt="xl" withCloseButton onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
+      {error && <Alert title="Ошибка!" color="red" mt="xl" onClose={() => setError('')} withCloseButton>{error}</Alert>}
     </Container>
   );
 }
