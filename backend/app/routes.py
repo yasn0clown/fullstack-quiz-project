@@ -1,4 +1,4 @@
-from flask import current_app as app, request, jsonify
+from flask import current_app as app, request, jsonify, Response
 from . import db, bcrypt
 from .models import User, Result, Quiz, Question
 from .services import generate_quiz_from_api
@@ -305,3 +305,45 @@ def change_user_role(user_id):
     db.session.commit()
 
     return jsonify({'message': f'Роль пользователя {user_to_edit.username} изменена на {new_role}'})
+
+
+
+@app.route('/robots.txt')
+def robots():
+    r = Response("User-agent: *\nDisallow: /admin\nDisallow: /profile\nSitemap: http://127.0.0.1:5000/sitemap.xml", mimetype="text/plain")
+    return r
+
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = []
+    for rule in ['/', '/community', '/leaderboard']:
+        pages.append(f"http://127.0.0.1:5000{rule}")
+    
+    quizzes = Quiz.query.all()
+    for quiz in quizzes:
+        pages.append(f"http://127.0.0.1:5000/quiz/{quiz.id}")
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    for page in pages:
+        xml += f'<url><loc>{page}</loc></url>'
+    xml += '</urlset>'
+    
+    return Response(xml, mimetype='application/xml')
+
+
+
+@app.route('/api/external/wiki', methods=['GET'])
+def get_wiki_summary():
+    query = request.args.get('query')
+    if not query: 
+        return jsonify({"error": "Запрос пустой"}), 400
+    
+    from .services import fetch_wikipedia_summary
+    text = fetch_wikipedia_summary(query)
+    
+    if text:
+        return jsonify({"text": text})
+    
+    return jsonify({"error": f"Статья '{query}' не найдена в Википедии"}), 404

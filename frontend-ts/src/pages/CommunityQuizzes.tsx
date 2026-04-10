@@ -4,6 +4,7 @@ import { Container, Title, Table, Loader, Alert, Button, Group, TextInput, Selec
 import { IconSearch, IconTrash } from '@tabler/icons-react';
 import { useAuth } from '../AuthContext';
 import api from '../api';
+import SEO from '../components/SEO';
 
 export default function CommunityQuizzes() {
   const navigate = useNavigate();
@@ -61,8 +62,12 @@ export default function CommunityQuizzes() {
 
   return (
     <Container size="lg">
+      <SEO 
+        title="Библиотека квизов" 
+        description="Список всех доступных тестов, созданных сообществом. Выбирайте тему и проходите квизы онлайн." 
+      />
       <Group justify="space-between" mb="xl">
-        <Title>Библиотека квизов</Title>
+        <Title order={1}>Библиотека квизов</Title>
         <Button onClick={() => navigate('/generator')}>Создать свой квиз</Button>
       </Group>
 

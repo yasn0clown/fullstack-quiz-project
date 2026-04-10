@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Container, Title, Paper, TextInput, Textarea, Button, Avatar, FileButton, Group, Stack, Notification, Loader, Center, Text } from '@mantine/core';
 import { IconUpload, IconCheck, IconX } from '@tabler/icons-react';
 import api from '../api';
+import SEO from '../components/SEO';
 
 export default function Profile() {
   const [username, setUsername] = useState('');
@@ -70,7 +71,8 @@ export default function Profile() {
 
   return (
     <Container size="sm">
-      <Title mb="xl">Настройки профиля</Title>
+      <SEO title="Мой профиль" description="Управление личными данными и аватаром." />
+      <Title order={1} mb="xl">Настройки профиля</Title>
       
       <Paper withBorder p="xl" radius="md" shadow="md">
         <Stack align="center" mb={30}>
@@ -78,6 +80,7 @@ export default function Profile() {
             src={avatarUrl} 
             size={150} 
             radius={150} 
+            alt={`Аватар пользователя ${username}`} 
             style={{ border: '2px solid var(--mantine-color-blue-filled)' }} 
           />
           

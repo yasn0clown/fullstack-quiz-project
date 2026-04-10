@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import urllib.parse
 
 def generate_quiz_from_api(context, num_questions):
     API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -45,3 +46,25 @@ def generate_quiz_from_api(context, num_questions):
     
     api_response_text = response.json()['choices'][0]['message']['content']
     return json.loads(api_response_text)
+
+
+def fetch_wikipedia_summary(query):
+    query = query.strip().capitalize()
+    
+    encoded_query = urllib.parse.quote(query.replace(" ", "_"))
+    
+    url = f"https://ru.wikipedia.org/api/rest_v1/page/summary/{encoded_query}"
+    
+    try:
+        headers = {'User-Agent': 'MyQuizApp/1.0 (contact@example.com)'}
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('extract', '')
+        
+        print(f"Wiki API returned {response.status_code} for {query}")
+        return None
+    except Exception as e:
+        print(f"Wiki API Error: {e}")
+        return None

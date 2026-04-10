@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Container, Title, Table, Loader, Pagination, Stack } from '@mantine/core';
 import api from '../api';
+import SEO from '../components/SEO';
 
 export default function Leaderboard() {
   const [results, setResults] = useState<any[]>([]);
@@ -20,7 +21,11 @@ export default function Leaderboard() {
 
   return (
     <Container>
-      <Title mb="xl">Таблица лидеров</Title>
+      <SEO 
+        title="Таблица лидеров" 
+        description="Рейтинг лучших участников. Узнайте, кто набрал больше всего баллов в наших интеллектуальных тестах." 
+      />
+      <Title order={1} mb="xl">Таблица лидеров</Title>
       {loading ? <Loader size="xl" /> : (
         <Stack>
           <Table striped highlightOnHover withTableBorder>

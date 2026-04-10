@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Container, Title, Paper, TextInput, PasswordInput, Button, Text, Anchor } from '@mantine/core';
+import SEO from '../components/SEO';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -20,7 +21,8 @@ export default function Register() {
 
   return (
     <Container size={420} my={40}>
-      <Title align="center">Регистрация</Title>
+      <SEO title="Регистрация" description="Создайте аккаунт, чтобы получить доступ ко всем функциям платформы интеллектуальных тестов." />
+      <Title order={1} align="center">Регистрация</Title>
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <TextInput label="Имя пользователя" value={username} onChange={(e) => setUsername(e.target.value)} required />
         <PasswordInput label="Пароль" mt="md" value={password} onChange={(e) => setPassword(e.target.value)} required />

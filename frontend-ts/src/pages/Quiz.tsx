@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Title, Paper, Radio, Button, Group, Text, Loader, Stack, Image } from '@mantine/core';
 import api from '../api';
+import SEO from '../components/SEO';
 
 interface Question {
   question: string;
@@ -150,10 +151,23 @@ export default function Quiz() {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <Container>
-      <Title order={2}>Вопрос {currentQuestionIndex + 1} из {questions.length}</Title>
+    <Container size="sm">
+      <SEO 
+        title={`Тест: ${quizTitle}`} 
+        description={`Проверьте свои знания в тесте "${quizTitle}". Интерактивные вопросы и мгновенный результат.`} 
+      />
+      <Title order={1} size="h2">Вопрос {currentQuestionIndex + 1} из {questions.length}</Title>
       <Paper withBorder p="xl" mt="md" shadow="md">
-        {quizImage && (<Image src={quizImage} height={200} radius="md" mb="xl" fit="contain" alt="Обложка квиза" />)}
+        {quizImage && (
+          <Image 
+            src={quizImage} 
+            height={200} 
+            radius="md" 
+            mb="xl" 
+            fit="contain" 
+            alt={`Обложка теста: ${quizTitle}`} 
+          />
+        )}
         <Text size="lg" mb="md">{currentQuestion.question}</Text>
         <Stack mt="xs">
           {currentQuestion.options.map((option) => (

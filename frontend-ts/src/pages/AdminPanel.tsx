@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Container, Title, TextInput, Button, Paper, Group, Notification } from '@mantine/core';
 import api from '../api';
+import SEO from '../components/SEO';
 
 export default function AdminPanel() {
   const [userId, setUserId] = useState('');
@@ -21,7 +22,8 @@ export default function AdminPanel() {
 
   return (
     <Container>
-      <Title mb="xl">Панель Администратора</Title>
+      <SEO title="Панель администратора" description="Управление пользователями и правами доступа." />
+      <Title order={1} mb="xl">Панель Администратора</Title>
       
       <Paper withBorder p="xl">
         <Title order={3} mb="md">Управление ролями</Title>
