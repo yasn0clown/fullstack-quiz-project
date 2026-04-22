@@ -25,9 +25,10 @@ def create_app(config_class=Config):
     cors.init_app(app)
     Swagger(app, template=app.config['SWAGGER_TEMPLATE'])
 
+    from .routes import bp as main_bp
+    app.register_blueprint(main_bp)
+
     with app.app_context():
-        from . import routes
-        
         db.create_all()
 
     return app

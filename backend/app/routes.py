@@ -1,4 +1,4 @@
-from flask import current_app as app, request, jsonify, Response
+from flask import current_app as app, request, jsonify, Response, Blueprint
 from . import db, bcrypt
 from .models import User, Result, Quiz, Question
 from .services import generate_quiz_from_api
@@ -7,8 +7,9 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, get_j
 from .rbac import permission_required
 from .storage import upload_file_to_s3
 
+bp = Blueprint('main', __name__)
 
-@app.route('/api/register', methods=['POST'])
+@bp.route('/api/register', methods=['POST'])
 @swag_from('../docs/auth_register.yml')
 def register():
     data = request.json
@@ -23,7 +24,7 @@ def register():
 
 
 
-@app.route('/api/login', methods=['POST'])
+@bp.route('/api/login', methods=['POST'])
 @swag_from('../docs/auth_login.yml')
 def login():
     data = request.json
@@ -37,7 +38,7 @@ def login():
 
 
 
-@app.route('/api/refresh', methods=['POST'])
+@bp.route('/api/refresh', methods=['POST'])
 @swag_from('../docs/auth_refresh.yml')
 def refresh():
     verify_jwt_in_request(refresh=True)
@@ -47,7 +48,7 @@ def refresh():
 
 
 
-@app.route('/api/profile', methods=['GET', 'PUT'])
+@bp.route('/api/profile', methods=['GET', 'PUT'])
 @swag_from('../docs/auth_profile.yml')
 def profile():
     verify_jwt_in_request()
@@ -82,7 +83,7 @@ def profile():
 
 
 
-@app.route('/api/profile/avatar', methods=['POST'])
+@bp.route('/api/profile/avatar', methods=['POST'])
 def upload_avatar():
     verify_jwt_in_request()
     current_user_id = get_jwt_identity()
@@ -108,7 +109,7 @@ def upload_avatar():
 
 
 
-@app.route('/api/questions')
+@bp.route('/api/questions')
 @swag_from('../docs/quiz_get_demo.yml')
 def get_questions():
     questions_db = [
@@ -118,7 +119,7 @@ def get_questions():
 
 
 
-@app.route('/api/generate-quiz', methods=['POST'])
+@bp.route('/api/generate-quiz', methods=['POST'])
 @swag_from('../docs/quiz_post_generate.yml')
 @permission_required('create_quizzes')
 def generate_quiz():
@@ -134,7 +135,7 @@ def generate_quiz():
 
 
 
-@app.route('/api/results', methods=['GET', 'POST'])
+@bp.route('/api/results', methods=['GET', 'POST'])
 @swag_from('../docs/results.yml')
 def handle_results():
     if request.method == 'POST':
@@ -171,7 +172,7 @@ def handle_results():
 
 
 
-@app.route('/api/quizzes', methods=['GET'])
+@bp.route('/api/quizzes', methods=['GET'])
 @swag_from('../docs/quizzes_get_all.yml')
 def get_all_quizzes():
     verify_jwt_in_request()
@@ -218,7 +219,7 @@ def get_all_quizzes():
 
 
 
-@app.route('/api/quizzes/<int:quiz_id>', methods=['GET'])
+@bp.route('/api/quizzes/<int:quiz_id>', methods=['GET'])
 @swag_from('../docs/quizzes_get_one.yml')
 def get_quiz_by_id(quiz_id):
     verify_jwt_in_request()
@@ -231,7 +232,7 @@ def get_quiz_by_id(quiz_id):
 
 
 
-@app.route('/api/quizzes/<int:quiz_id>', methods=['DELETE'])
+@bp.route('/api/quizzes/<int:quiz_id>', methods=['DELETE'])
 def delete_quiz(quiz_id):
     verify_jwt_in_request()
     current_user_id = int(get_jwt_identity())
@@ -253,7 +254,7 @@ def delete_quiz(quiz_id):
 
 
 
-@app.route('/api/quizzes', methods=['POST'])
+@bp.route('/api/quizzes', methods=['POST'])
 @swag_from('../docs/quizzes_post_new.yml')
 def save_new_quiz():
     verify_jwt_in_request()
@@ -275,7 +276,7 @@ def save_new_quiz():
 
 
 
-@app.route('/api/quizzes/upload-image', methods=['POST'])
+@bp.route('/api/quizzes/upload-image', methods=['POST'])
 def upload_quiz_image():
     verify_jwt_in_request()
     if 'file' not in request.files:
@@ -291,7 +292,7 @@ def upload_quiz_image():
 
 
 
-@app.route('/api/admin/users/<int:user_id>/role', methods=['POST'])
+@bp.route('/api/admin/users/<int:user_id>/role', methods=['POST'])
 @permission_required('manage_users')
 def change_user_role(user_id):
     data = request.json
@@ -308,14 +309,14 @@ def change_user_role(user_id):
 
 
 
-@app.route('/robots.txt')
+@bp.route('/robots.txt')
 def robots():
     r = Response("User-agent: *\nDisallow: /admin\nDisallow: /profile\nSitemap: http://127.0.0.1:5000/sitemap.xml", mimetype="text/plain")
     return r
 
 
 
-@app.route('/sitemap.xml')
+@bp.route('/sitemap.xml')
 def sitemap():
     pages = []
     for rule in ['/', '/community', '/leaderboard']:
@@ -334,7 +335,7 @@ def sitemap():
 
 
 
-@app.route('/api/external/wiki', methods=['GET'])
+@bp.route('/api/external/wiki', methods=['GET'])
 def get_wiki_summary():
     query = request.args.get('query')
     if not query: 
