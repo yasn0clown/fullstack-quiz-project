@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    container_name: quiz_backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/quiz.db:/app/quiz.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/questions"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quiz_network
+
+  frontend:
+    build: ./frontend-ts
+    container_name: quiz_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - quiz_network
+
+networks:
+  quiz_network:
+    driver: bridge

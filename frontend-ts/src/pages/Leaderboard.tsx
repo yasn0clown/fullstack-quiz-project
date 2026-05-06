@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Container, Title, Table, Loader, Pagination, Stack } from '@mantine/core';
+import { Container, Title, Table, Loader, Pagination, Stack, Group } from '@mantine/core';
 import api from '../api';
 import SEO from '../components/SEO';
 
@@ -48,7 +48,9 @@ export default function Leaderboard() {
               ))}
             </Table.Tbody>
           </Table>
-          <Pagination total={totalPages} value={page} onChange={setPage} justify="center" />
+            <Group justify="center" mt="xl">
+              <Pagination total={totalPages} value={page} onChange={setPage} />
+            </Group>
         </Stack>
       )}
     </Container>

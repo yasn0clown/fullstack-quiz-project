@@ -20,7 +20,7 @@ def generate_quiz_from_api(context, num_questions):
     headers = { 
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",
-        'HTTP-Referer': 'http://localhost:3000',
+        'HTTP-Referer': 'http://localhost',
         'X-Title': 'Quiz Platform'
         }
     payload = {

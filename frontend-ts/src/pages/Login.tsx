@@ -1,18 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { Container, Title, Paper, TextInput, PasswordInput, Button, Text, Anchor } from '@mantine/core';
 import SEO from '../components/SEO';
 
 export default function Login() {
-  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/login', { username, password });
+      const response = await api.post('/login', { username, password });
       localStorage.setItem('accessToken', response.data.access_token);
       localStorage.setItem('refreshToken', response.data.refresh_token);
       window.location.href = '/';
@@ -24,7 +22,7 @@ export default function Login() {
   return (
     <Container size={420} my={40}>
       <SEO title="Вход" description="Войдите в систему, чтобы сохранять результаты тестов и создавать свои квизы." />
-      <Title order={1} align="center">Вход</Title>
+      <Title order={1} ta="center">Вход</Title>
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         <TextInput label="Имя пользователя" value={username} onChange={(e) => setUsername(e.target.value)} required />
         <PasswordInput label="Пароль" mt="md" value={password} onChange={(e) => setPassword(e.target.value)} required />

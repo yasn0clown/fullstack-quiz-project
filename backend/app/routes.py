@@ -311,7 +311,8 @@ def change_user_role(user_id):
 
 @bp.route('/robots.txt')
 def robots():
-    r = Response("User-agent: *\nDisallow: /admin\nDisallow: /profile\nSitemap: http://127.0.0.1:5000/sitemap.xml", mimetype="text/plain")
+    sitemap_url = f"{request.host_url}sitemap.xml"
+    r = Response(f"User-agent: *\nDisallow: /admin\nDisallow: /profile\nSitemap: {sitemap_url}", mimetype="text/plain")
     return r
 
 
@@ -319,12 +320,14 @@ def robots():
 @bp.route('/sitemap.xml')
 def sitemap():
     pages = []
+    host = request.host_url.rstrip('/')
+
     for rule in ['/', '/community', '/leaderboard']:
-        pages.append(f"http://127.0.0.1:5000{rule}")
+        pages.append(f"{host}{rule}")
     
     quizzes = Quiz.query.all()
     for quiz in quizzes:
-        pages.append(f"http://127.0.0.1:5000/quiz/{quiz.id}")
+        pages.append(f"{host}/quiz/{quiz.id}")
 
     xml = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     for page in pages:
