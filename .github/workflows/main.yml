@@ -17,6 +17,7 @@ jobs:
         run: |
           cd backend
           pip install -r requirements.txt
+          pip install pytest pytest-flask pytest-cov
       - name: Run Pytest
         run: |
           cd backend
